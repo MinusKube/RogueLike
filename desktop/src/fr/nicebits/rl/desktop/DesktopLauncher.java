@@ -7,6 +7,8 @@ import fr.nicebits.rl.RogueLike;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+		config.resizable = false;
+
 		new LwjglApplication(new RogueLike(), config);
 	}
 }
