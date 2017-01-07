@@ -1,34 +1,13 @@
 package fr.nicebits.rl;
 
-import com.badlogic.gdx.Application;
-import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.controllers.Controller;
-import com.badlogic.gdx.controllers.ControllerListener;
-import com.badlogic.gdx.controllers.Controllers;
-import com.badlogic.gdx.controllers.PovDirection;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.controllers.*;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Box2D;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.physics.box2d.*;
 
 import java.text.DecimalFormat;
 
@@ -138,15 +117,14 @@ public class RogueLike extends Game {
 
         objectFixtureDef.shape = circle;
         objectFixtureDef.density = 0.6f;
-        objectFixtureDef.friction = 0.4f;
-        objectFixtureDef.restitution = 0.5f;
+        objectFixtureDef.friction = 0.15f;
+        objectFixtureDef.restitution = 0.2f;
 
         object.getMassData().mass = 5f;
 
         Fixture fixture = object.createFixture(objectFixtureDef);
 
         circle.dispose();
-
 
         debugRenderer = new Box2DDebugRenderer();
         cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -170,7 +148,7 @@ public class RogueLike extends Game {
             @Override
             public boolean buttonDown(Controller controller, int buttonCode) {
                 if(buttonCode == 0) {
-                    object.applyForceToCenter(0, 9.81f, true);
+                    object.applyForceToCenter(0, 20f, true);
                 }
                 return false;
             }
@@ -245,7 +223,7 @@ public class RogueLike extends Game {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.FIREBRICK);
         shapeRenderer.ellipse((object.getPosition().x * PPM) - 25, (object.getPosition().y * PPM) - 25, 50, 50);
-        shapeRenderer.setColor(Color.CHARTREUSE);
+        shapeRenderer.setColor(Color.BROWN);
         shapeRenderer.rect(ground.getPosition().x * PPM, ground.getPosition().y * PPM, Gdx.graphics.getWidth(), 50);
         shapeRenderer.end();
 
@@ -262,11 +240,11 @@ public class RogueLike extends Game {
                 hudBatch.end();
             }
 
-            float lxAxis = controller.getAxis(1);
-            float lyAxis = controller.getAxis(0);
+            float lxAxis = controller.getName().toLowerCase().contains("xbox") ? controller.getAxis(1) : controller.getAxis(3);
+            float lyAxis = controller.getName().toLowerCase().contains("xbox") ? controller.getAxis(0) : controller.getAxis(2);
 
-            float rxAxis = controller.getAxis(3);
-            float ryAxis = controller.getAxis(2);
+            float rxAxis = controller.getName().toLowerCase().contains("xbox") ? controller.getAxis(3) : controller.getAxis(1);
+            float ryAxis = controller.getName().toLowerCase().contains("xbox") ? controller.getAxis(2) : controller.getAxis(0);
 
             object.applyLinearImpulse(lxAxis / PPM, -lyAxis / PPM,
                     object.getPosition().x, object.getPosition().y, true);
@@ -318,4 +296,5 @@ public class RogueLike extends Game {
         shapeRenderer.dispose();
         hudRenderer.dispose();
     }
+
 }
