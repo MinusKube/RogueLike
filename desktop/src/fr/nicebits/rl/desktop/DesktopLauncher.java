@@ -5,7 +5,8 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import fr.nicebits.rl.RogueLike;
 
 public class DesktopLauncher {
-	public static void main (String[] arg) {
+
+	public static void main(String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.resizable = false;
 		config.width = 1280;
@@ -14,4 +15,5 @@ public class DesktopLauncher {
 
 		new LwjglApplication(new RogueLike(), config);
 	}
+
 }
