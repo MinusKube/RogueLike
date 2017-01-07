@@ -10,7 +10,11 @@ import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.controllers.PovDirection;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -19,6 +23,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2D;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -29,20 +34,33 @@ import java.text.DecimalFormat;
 
 public class RogueLike extends Game {
 
+    private static final int VIEWPORT_WIDTH = 12;
+    private static final int VIEWPORT_HEIGHT = 10;
+
+    private static final float PPM = 100f;
+
+    private boolean debug = false;
+
     private SpriteBatch batch;
+    private SpriteBatch hudBatch;
     private ShapeRenderer shapeRenderer;
-    private BitmapFont font;
+    private ShapeRenderer hudRenderer;
+
+    private BitmapFont font24;
+    private BitmapFont font18;
 
     private World world;
 
     private Body ground;
     private Body object;
 
-    //private OrthographicCamera cam;
-    //private Box2DDebugRenderer debugRenderer;
+    private OrthographicCamera cam;
+    private Box2DDebugRenderer debugRenderer;
+
+    private Sprite bgSprite;
 
     @Override
-	public void create() {
+    public void create() {
 
         /* *** INIT *** */
 
@@ -50,74 +68,93 @@ public class RogueLike extends Game {
         Box2D.init();
 
         batch = new SpriteBatch();
+        hudBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
+        hudRenderer = new ShapeRenderer();
 
 
         /* *** FONTS *** */
 
-        font = new BitmapFont();
+        FreeTypeFontGenerator generatorTube = new FreeTypeFontGenerator(Gdx.files.internal("fonts/TubeOfCorn.ttf"));
+        FreeTypeFontGenerator generatorArial = new FreeTypeFontGenerator(Gdx.files.internal("fonts/arial.ttf"));
 
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/TubeOfCorn.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
-        param.size = 24;
         param.color = Color.GRAY;
 
-        font = generator.generateFont(param);
-        generator.dispose();
+        param.size = 24;
+        font24 = generatorTube.generateFont(param);
 
+        param.size = 18;
+        font18 = generatorArial.generateFont(param);
+
+        generatorTube.dispose();
+        generatorArial.dispose();
 
         /* *** WORLD *** */
 
-        world = new World(new Vector2(0f, -10) /* Applied force */, true);
+        world = new World(new Vector2(0f, -9.81f) /* Applied force */, true);
 
 
         /* *** GROUND *** */
 
+        float groundW = Gdx.graphics.getWidth() / PPM;
+        float groundH = 50 / PPM;
+
+        // Body
+
         BodyDef groundBodyDef = new BodyDef();
         groundBodyDef.type = BodyDef.BodyType.StaticBody;
-        groundBodyDef.position.set(0, 150);
+        groundBodyDef.position.set(0, 180 / PPM);
 
         ground = world.createBody(groundBodyDef);
 
+        // Shape
+
         PolygonShape groundBox = new PolygonShape();
-        groundBox.setAsBox(800, 10);
-        ground.createFixture(groundBox, 0.0f);
+        groundBox.setAsBox(groundW / 2, groundH / 2,
+                new Vector2(groundW / 2, groundH / 2), 0);
+        FixtureDef groundFixtureDef = new FixtureDef();
+
+        groundFixtureDef.shape = groundBox;
+
+        ground.createFixture(groundFixtureDef);
 
         groundBox.dispose();
-
 
         /* *** OBJECT *** */
 
         BodyDef objectBodyDef = new BodyDef();
         objectBodyDef.type = BodyDef.BodyType.DynamicBody;
-        objectBodyDef.position.set(800, 400);
+        objectBodyDef.position.set(400 / PPM, 800 / PPM);
 
         object = world.createBody(objectBodyDef);
+        object.setFixedRotation(true);
 
         CircleShape circle = new CircleShape();
-        circle.setRadius(25);
+        circle.setRadius(25 / PPM);
 
         FixtureDef objectFixtureDef = new FixtureDef();
 
         objectFixtureDef.shape = circle;
-        objectFixtureDef.density = 1f;
-        objectFixtureDef.friction = 1f;
-        objectFixtureDef.restitution = 1f;
+        objectFixtureDef.density = 0.6f;
+        objectFixtureDef.friction = 0.4f;
+        objectFixtureDef.restitution = 0.5f;
+
+        object.getMassData().mass = 5f;
 
         Fixture fixture = object.createFixture(objectFixtureDef);
 
         circle.dispose();
 
 
-        /* *** DEBUG *** */
+        debugRenderer = new Box2DDebugRenderer();
+        cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2, 0);
+        cam.update();
 
-        /*cam = new OrthographicCamera(30, 30 * (Gdx.graphics.getHeight() / Gdx.graphics.getWidth()));
-
-        cam.position.set(cam.viewportWidth / 2f, cam.viewportHeight / 2f, 0);
-        cam.update();*/
-
-        //debugRenderer = new Box2DDebugRenderer();
+        if(Controllers.getControllers().size == 0)
+            return;
 
         Controllers.getControllers().get(0).addListener(new ControllerListener() {
             @Override
@@ -132,71 +169,98 @@ public class RogueLike extends Game {
 
             @Override
             public boolean buttonDown(Controller controller, int buttonCode) {
-                Gdx.app.debug("Controller", "Button Down: " + buttonCode);
+                if(buttonCode == 0) {
+                    object.applyForceToCenter(0, 9.81f, true);
+                }
                 return false;
             }
 
             @Override
             public boolean buttonUp(Controller controller, int buttonCode) {
-                Gdx.app.debug("Controller", "Button Up: " + buttonCode);
                 return false;
             }
 
             @Override
             public boolean axisMoved(Controller controller, int axisCode, float value) {
-                Gdx.app.debug("Controller", "Axis Moved: " + axisCode + " -> " + value);
                 return false;
             }
 
             @Override
             public boolean povMoved(Controller controller, int povCode, PovDirection value) {
-                Gdx.app.debug("Controller", "Pov Moved: " + povCode + " -> " + value.name());
                 return false;
             }
 
             @Override
             public boolean xSliderMoved(Controller controller, int sliderCode, boolean value) {
-                Gdx.app.debug("Controller", "xSlider Moved: " + sliderCode + " -> " + value);
                 return false;
             }
 
             @Override
             public boolean ySliderMoved(Controller controller, int sliderCode, boolean value) {
-                Gdx.app.debug("Controller", "ySlider Moved: " + sliderCode + " -> " + value);
                 return false;
             }
 
             @Override
             public boolean accelerometerMoved(Controller controller, int accelerometerCode, Vector3 value) {
-                Gdx.app.debug("Controller", "Accel Moved: " + accelerometerCode + " -> "
+                Gdx.app.debug(controller.getName(), "Accel Moved: " + accelerometerCode + " -> "
                         + value.toString());
                 return false;
             }
         });
+
+        Texture background = new Texture(new Pixmap(Gdx.files.internal("bg.png")));
+        background.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+
+        bgSprite = new Sprite(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.app.debug("Background", bgSprite.getU() + " / " + bgSprite.getV() + " / "
+                + bgSprite.getU2() + " / " + bgSprite.getV2());
     }
 
-	@Override
-	public void render() {
+    @Override
+    public void render() {
         super.render();
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F3))
+            debug = !debug;
+
+        cam.position.set(object.getPosition().scl(PPM), 0);
+        cam.update();
+
+        batch.setProjectionMatrix(cam.combined);
+        shapeRenderer.setProjectionMatrix(cam.combined);
+
+        world.step(1/45f, 6, 2);
 
         Gdx.gl.glClearColor(.8f, .8f, .8f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+        float x = cam.position.x / 300f;
+        float y = cam.position.y / 300f;
+        bgSprite.setRegion(x, y, x + 16f, y + 9f);
+
+        hudBatch.begin();
+        bgSprite.draw(hudBatch);
+        hudBatch.end();
+
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.FIREBRICK);
-        shapeRenderer.ellipse(object.getPosition().x - 25, object.getPosition().y - 25, 50, 50);
+        shapeRenderer.ellipse((object.getPosition().x * PPM) - 25, (object.getPosition().y * PPM) - 25, 50, 50);
         shapeRenderer.setColor(Color.CHARTREUSE);
-        shapeRenderer.rect(ground.getPosition().x, ground.getPosition().y, 800, 10);
+        shapeRenderer.rect(ground.getPosition().x * PPM, ground.getPosition().y * PPM, Gdx.graphics.getWidth(), 50);
         shapeRenderer.end();
 
         int a = 0;
+
         for(Controller controller : Controllers.getControllers()) {
-            batch.begin();
-            for(int i = 0; i < 5; i++) {
-                font.draw(batch, i + ": " + new DecimalFormat("#.##").format(controller.getAxis(i)),
-                        50 + (200 * a), 500 - (i * 50));
+            if(debug) {
+                hudBatch.begin();
+                font18.setColor(Color.BLACK);
+                for(int i = 0; i < 5; i++) {
+                    font18.draw(hudBatch, i + ": " + new DecimalFormat("#.##").format(controller.getAxis(i)),
+                            20 + (80 * a), 650 - (i * 30));
+                }
+                hudBatch.end();
             }
-            batch.end();
 
             float lxAxis = controller.getAxis(1);
             float lyAxis = controller.getAxis(0);
@@ -204,55 +268,54 @@ public class RogueLike extends Game {
             float rxAxis = controller.getAxis(3);
             float ryAxis = controller.getAxis(2);
 
-            object.applyLinearImpulse(lxAxis, -lyAxis,
+            object.applyLinearImpulse(lxAxis / PPM, -lyAxis / PPM,
                     object.getPosition().x, object.getPosition().y, true);
 
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(Color.GRAY);
-            shapeRenderer.ellipse(550 + (300 * a), 610, 100, 100);
-            shapeRenderer.setColor(new Color(Color.DARK_GRAY).sub(0.05f, 0.05f, 0.05f, 0));
-            shapeRenderer.ellipse(550 + (300 * a) + 30 + (28 * lxAxis), 610 + 30 - (28 * lyAxis),
+            hudRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            hudRenderer.setColor(Color.GRAY);
+            hudRenderer.ellipse(550 + (300 * a), 610, 100, 100);
+            hudRenderer.setColor(new Color(Color.DARK_GRAY).sub(0.05f, 0.05f, 0.05f, 0));
+            hudRenderer.ellipse(550 + (300 * a) + 30 + (28 * lxAxis), 610 + 30 - (28 * lyAxis),
                     40, 40);
-            shapeRenderer.setColor(Color.DARK_GRAY);
-            shapeRenderer.ellipse(550 + (300 * a) + 30 + (30 * lxAxis), 610 + 30 - (30 * lyAxis),
+            hudRenderer.setColor(Color.DARK_GRAY);
+            hudRenderer.ellipse(550 + (300 * a) + 30 + (30 * lxAxis), 610 + 30 - (30 * lyAxis),
                     40, 40);
 
-            shapeRenderer.setColor(Color.GRAY);
-            shapeRenderer.ellipse(700 + (300 * a), 610, 100, 100);
-            shapeRenderer.setColor(new Color(Color.DARK_GRAY).sub(0.05f, 0.05f, 0.05f, 0));
-            shapeRenderer.ellipse(700 + (300 * a) + 30 + (28 * rxAxis), 610 + 30 - (28 * ryAxis),
+            hudRenderer.setColor(Color.GRAY);
+            hudRenderer.ellipse(700 + (300 * a), 610, 100, 100);
+            hudRenderer.setColor(new Color(Color.DARK_GRAY).sub(0.05f, 0.05f, 0.05f, 0));
+            hudRenderer.ellipse(700 + (300 * a) + 30 + (28 * rxAxis), 610 + 30 - (28 * ryAxis),
                     40, 40);
-            shapeRenderer.setColor(Color.DARK_GRAY);
-            shapeRenderer.ellipse(700 + (300 * a) + 30 + (30 * rxAxis), 610 + 30 - (30 * ryAxis),
+            hudRenderer.setColor(Color.DARK_GRAY);
+            hudRenderer.ellipse(700 + (300 * a) + 30 + (30 * rxAxis), 610 + 30 - (30 * ryAxis),
                     40, 40);
-            shapeRenderer.end();
+            hudRenderer.end();
 
             a++;
         }
 
-        batch.begin();
-        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, Gdx.graphics.getHeight() - 10);
+        if(debug) {
+            hudBatch.begin();
+            font24.draw(hudBatch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, Gdx.graphics.getHeight() - 10);
+            hudBatch.end();
 
-        batch.end();
-
-        world.step(1/45f, 6, 2);
-        //debugRenderer.render(world, cam.combined);
-
-        Vector2 pos = object.getPosition();
-        Vector2 vel = object.getLinearVelocity();
-
-        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            object.applyForceToCenter(-50f, 0, true);
+            debugRenderer.setDrawAABBs(true);
+            debugRenderer.setDrawVelocities(true);
+            debugRenderer.setDrawBodies(true);
+            debugRenderer.setDrawContacts(true);
+            debugRenderer.render(world, cam.combined.cpy().scale(PPM, PPM, 0));
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            object.applyForceToCenter(50f, 0, true);
-        }
-	}
-	
-	@Override
-	public void dispose() {
-		super.dispose();
+    }
 
-		batch.dispose();
-	}
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        batch.dispose();
+        hudBatch.dispose();
+        world.dispose();
+        font24.dispose();
+        shapeRenderer.dispose();
+        hudRenderer.dispose();
+    }
 }
