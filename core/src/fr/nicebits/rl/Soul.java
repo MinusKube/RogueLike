@@ -7,7 +7,7 @@ public class Soul extends Game {
 
     @Override
     public void create() {
-        setScreen(new MainMenuUI());
+        setScreen(new MainMenuUI(this));
     }
 
     @Override

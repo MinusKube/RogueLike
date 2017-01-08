@@ -11,7 +11,7 @@ import com.badlogic.gdx.physics.box2d.*;
 
 import java.text.DecimalFormat;
 
-public class RogueLikeOld extends Game {
+public class RogueLikeOld extends Game implements Screen {
 
     private static final int VIEWPORT_WIDTH = 12;
     private static final int VIEWPORT_HEIGHT = 10;
@@ -283,6 +283,21 @@ public class RogueLikeOld extends Game {
             debugRenderer.setDrawContacts(true);
             debugRenderer.render(world, cam.combined.cpy().scale(PPM, PPM, 0));
         }
+    }
+
+    @Override
+    public void show() {
+        create();
+    }
+
+    @Override
+    public void render(float delta) {
+        render();
+    }
+
+    @Override
+    public void hide() {
+
     }
 
     @Override
