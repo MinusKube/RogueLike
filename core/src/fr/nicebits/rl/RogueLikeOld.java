@@ -11,7 +11,7 @@ import com.badlogic.gdx.physics.box2d.*;
 
 import java.text.DecimalFormat;
 
-public class RogueLike extends Game {
+public class RogueLikeOld extends Game {
 
     private static final int VIEWPORT_WIDTH = 12;
     private static final int VIEWPORT_HEIGHT = 10;

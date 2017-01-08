@@ -2,7 +2,7 @@ package fr.nicebits.rl.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import fr.nicebits.rl.RogueLike;
+import fr.nicebits.rl.Soul;
 
 public class DesktopLauncher {
 
@@ -13,7 +13,7 @@ public class DesktopLauncher {
 		config.height = 720;
 		config.samples = 16;
 
-		new LwjglApplication(new RogueLike(), config);
+		new LwjglApplication(new Soul(), config);
 	}
 
 }
