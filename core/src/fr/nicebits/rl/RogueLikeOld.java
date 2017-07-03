@@ -214,7 +214,7 @@ public class RogueLikeOld extends Game implements Screen {
 
         float x = cam.position.x / 300f;
         float y = cam.position.y / 300f;
-        bgSprite.setRegion(x, y, x + 16f, y + 9f);
+        bgSprite.setRegion(x, -y, x + 16f, -y + 9f);
 
         hudBatch.begin();
         bgSprite.draw(hudBatch);
