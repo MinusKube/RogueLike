@@ -1,0 +1,12 @@
+    » Synopsis : C'est l'histoire d'une âme qui cherche à récupérer son corps qui est protégé par des scientifiques
+dans un laboratoire ressemblant à un donjon abandonné. Pour cela, il va utiliser les corps d'autres personnes pour
+parcourir le laboratoire où se trouve son corps. Pendant sa quête, il rencontrera des monstres laissés par ces
+scientifiques pour protéger le laboratoire.
+
+Affichage :
+    Vue » 2D avec fond sur plusieurs couches, De côté (Ex: Rogue Legacy, Limbo)
+    Style Graphique » Pixel Art, Assez sombre avec effets lumineux jolis
+
+Gameplay :
+    » Clavier: ZQSD
+    » Jouable à la manette
