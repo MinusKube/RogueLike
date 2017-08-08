@@ -4,13 +4,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import fr.nicebits.rl.Soul;
+import fr.nicebits.rl.ui.components.AnimatedImage;
 import fr.nicebits.rl.ui.components.TextButton;
+
+import java.util.Arrays;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
@@ -18,36 +23,58 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
 public class MainMenuUI extends UI {
 
+    private Texture logoSheet;
+
     public MainMenuUI(final Soul game) {
         super(game);
 
-        Table table = new Table();
-        table.defaults().size(320, 60).pad(10);
+        AnimatedImage image;
 
-        table.add(new TextButton("Play")).row();
-        table.add(new TextButton("Options")).row();
+        {
+            logoSheet = new Texture(Gdx.files.internal("textures/logoAnimated.png"));
 
-        TextButton quitBtn = new TextButton("Quit");
-        table.add(quitBtn);
+            TextureRegion[][] regions = TextureRegion.split(logoSheet,
+                    logoSheet.getWidth() / 3,
+                    logoSheet.getHeight() / 2);
 
-        quitBtn.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor_) {
-                table.getChildren()
-                        .forEach(actor -> {
-                            Action action = fadeOut(0.5f);
+            TextureRegion[] frames = Arrays.stream(regions)
+                    .flatMap(Arrays::stream)
+                    .toArray(TextureRegion[]::new);
 
-                            if(actor == quitBtn)
-                                action = sequence(action, run(() -> System.exit(0)));
+            image = new AnimatedImage(new Animation<>(0.15f, frames));
+        }
 
-                            actor.addAction(action);
-                        });
-            }
-        });
+        {
+            Table table = new Table();
+            table.defaults().size(320, 60).pad(10);
 
-        table.setFillParent(true);
+            table.add(image).size(128, 128).row();
 
-        stage.addActor(table);
+            table.add(new TextButton("Play")).row();
+            table.add(new TextButton("Options")).row();
+
+            TextButton quitBtn = new TextButton("Quit");
+            table.add(quitBtn);
+
+            quitBtn.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor_) {
+                    table.getChildren()
+                            .forEach(actor -> {
+                                Action action = fadeOut(0.5f);
+
+                                if(actor == quitBtn)
+                                    action = sequence(action, run(() -> System.exit(0)));
+
+                                actor.addAction(action);
+                            });
+                }
+            });
+
+            table.setFillParent(true);
+
+            stage.addActor(table);
+        }
     }
 
     @Override
@@ -71,6 +98,8 @@ public class MainMenuUI extends UI {
     @Override
     public void dispose() {
         super.dispose();
+
+        logoSheet.dispose();
     }
 
 }
