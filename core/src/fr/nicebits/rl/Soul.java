@@ -1,6 +1,7 @@
 package fr.nicebits.rl;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.physics.box2d.World;
 import fr.nicebits.rl.ui.MainMenuUI;
 import fr.nicebits.rl.ui.skin.SkinManager;
 
@@ -9,6 +10,7 @@ public class Soul extends Game {
     private static Soul instance;
 
     private SkinManager skinManager;
+    private World world;
 
     @Override
     public void create() {

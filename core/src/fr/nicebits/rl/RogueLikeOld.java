@@ -1,13 +1,38 @@
 package fr.nicebits.rl;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.controllers.*;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
+import box2dLight.DirectionalLight;
+import box2dLight.PointLight;
+import box2dLight.RayHandler;
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.controllers.Controller;
+import com.badlogic.gdx.controllers.ControllerListener;
+import com.badlogic.gdx.controllers.Controllers;
+import com.badlogic.gdx.controllers.PovDirection;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2D;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
 
 import java.text.DecimalFormat;
 
@@ -29,6 +54,7 @@ public class RogueLikeOld extends Game implements Screen {
     private BitmapFont font18;
 
     private World world;
+    private RayHandler rayHandler;
 
     private Body ground;
     private Body object;
@@ -37,6 +63,8 @@ public class RogueLikeOld extends Game implements Screen {
     private Box2DDebugRenderer debugRenderer;
 
     private Sprite bgSprite;
+
+    private PointLight light;
 
     @Override
     public void create() {
@@ -73,6 +101,13 @@ public class RogueLikeOld extends Game implements Screen {
         /* *** WORLD *** */
 
         world = new World(new Vector2(0f, -9.81f) /* Applied force */, true);
+
+        RayHandler.setGammaCorrection(true);
+        RayHandler.useDiffuseLight(true);
+
+        rayHandler = new RayHandler(world);
+        rayHandler.setAmbientLight(0, 0, 0, 0.5f);
+        rayHandler.setBlurNum(3);
 
 
         /* *** GROUND *** */
@@ -125,6 +160,11 @@ public class RogueLikeOld extends Game implements Screen {
         Fixture fixture = object.createFixture(objectFixtureDef);
 
         circle.dispose();
+
+        new DirectionalLight(rayHandler, 512, null, 90);
+
+        light = new PointLight(rayHandler, 128, Color.RED, 160, 0, 0);
+        //light.attachToBody(object, (25 / PPM) / 2, (25 / PPM) / 2);
 
         debugRenderer = new Box2DDebugRenderer();
         cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -226,6 +266,14 @@ public class RogueLikeOld extends Game implements Screen {
         shapeRenderer.setColor(Color.BROWN);
         shapeRenderer.rect(ground.getPosition().x * PPM, ground.getPosition().y * PPM, Gdx.graphics.getWidth(), 50);
         shapeRenderer.end();
+
+        light.setDistance(object.getLinearVelocity().len() * 10);
+        light.setColor(object.getLinearVelocity().len() / 200f, object.getLinearVelocity().len() / 200f,
+                object.getLinearVelocity().len() / 200f, 1);
+        light.setPosition(object.getPosition().x * PPM, object.getPosition().y * PPM);
+
+        rayHandler.setCombinedMatrix(cam);
+        rayHandler.updateAndRender();
 
         int a = 0;
 

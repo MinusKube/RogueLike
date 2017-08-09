@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import fr.nicebits.rl.RogueLikeOld;
 import fr.nicebits.rl.Soul;
 import fr.nicebits.rl.ui.components.AnimatedImage;
 import fr.nicebits.rl.ui.components.TextButton;
@@ -50,8 +51,18 @@ public class MainMenuUI extends UI {
 
             table.add(image).size(128, 128).row();
 
-            table.add(new TextButton("Play")).row();
-            table.add(new TextButton("Options")).row();
+            TextButton playBtn = new TextButton("Play");
+            table.add(playBtn).row();
+
+            playBtn.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    game.setScreen(new RogueLikeOld());
+                }
+            });
+
+            TextButton optionsBtn = new TextButton("Options");
+            table.add(optionsBtn).row();
 
             TextButton quitBtn = new TextButton("Quit");
             table.add(quitBtn);
